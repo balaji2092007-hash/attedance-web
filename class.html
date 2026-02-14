@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Attendance Register - SJC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { 
+    font-family: Arial; 
+    background: radial-gradient(circle at 50% 50%, #4b0082 0%, #000000 100%);
+    background-attachment: fixed;
+    padding: 10px; 
+    color: white;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Original Background Effects */
+body::before, body::after {
+    content: "";
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    filter: blur(80px);
+    z-index: -1;
+    animation: float 20s infinite alternate ease-in-out;
+}
+body::before { top: -100px; left: -100px; background: rgba(128, 0, 128, 0.3); }
+body::after { bottom: -100px; right: -100px; background: rgba(0, 100, 200, 0.2); }
+
+@keyframes float {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(100px, 100px) scale(1.5); }
+}
+
+.college-header-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.college-main-title {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.dept-subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f1c40f; 
+    margin-bottom: 5px;
+}
+
+.attendance-title {
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: #ecf0f1;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    display: inline-block;
+    padding-top: 5px;
+}
+
+.top-bar { 
+    text-align:center; 
+    margin-bottom:10px; 
+    background: rgba(0,0,0,0.3); 
+    padding: 15px; 
+    border-radius: 10px; 
+}
+
+table { 
+    width:100%; 
+    border-collapse:collapse; 
+    font-size:12px; 
+    margin-top:10px; 
+    color:black; 
+    background: rgba(255, 255, 255, 0.95); 
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th,td { border:1px solid #999; padding:5px; text-align:center; vertical-align:middle;}
+th { background:#2c3e50; color:white; }
+
+button { 
+    font-size:11px; 
+    margin:2px; 
+    padding:4px 8px; 
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+input, select { padding:4px; margin:3px; border-radius: 4px; border: 1px solid #ccc; }
+
+.P { color:#2ecc71; font-weight:bold; }
+.A { color:#e74c3c; font-weight:bold; }
+.D { color:#555; font-weight:bold; }
+
+/* Master class to disable interaction */
+.locked { background:#eee !important; pointer-events:none; opacity: 0.6; }
+
+.all-present-btn { background-color: #2ecc71; color:white; }
+.all-absent-btn { background-color: #e74c3c; color:white; }
+.lock-btn { background-color:#f39c12; color:white; }
+.edit-btn { background-color:#3498db; color:white; }
+.free-btn { background-color:#7f8c8d; color:white; }
+.eng-btn { background-color:#9b59b6; color:white; }
+
+.abs-count-box { font-size: 14px; font-weight: bold; color: #e74c3c; margin-bottom: 4px; }
+.summary { font-size:10px; text-align:center; color: #555; border-top: 1px solid #ddd; padding-top: 4px; margin-top: 4px; min-height: 20px; }
+
+.report-container { background: white; color: black; padding: 5px; border-radius: 5px; margin-top: 0px; width: 100%; }
+.report-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding: 5px; }
+.report-table { width: 100% !important; font-size: 10px; table-layout: fixed; }
+.report-table th, .report-table td { padding: 3px 1px !important; border: 1px solid #ccc !important; word-wrap: break-word; }
+.close-report-btn { background: #e74c3c; color: white; padding: 5px 10px; font-weight: bold; border-radius: 5px; border: none; }
+</style>
+</head>
+
+<body>
+
+<div id="main-content">
+    <div class="college-header-container">
+        <div class="college-main-title">ST. JOSEPH'S COLLEGE (AUTONOMOUS) TRICHY</div>
+        <div class="dept-subtitle">Department of Computer Science</div>
+        <div class="attendance-title">Students Attendance</div>
+    </div>
+
+    <div class="top-bar">
+    Date: <input type="date" id="attDate" onchange="onDateChange()">
+    Day Order:
+    <select id="dayOrder" onchange="updateTimeTable()">
+      <option value="">--Select--</option>
+      <option value="A">A</option><option value="B">B</option>
+      <option value="C">C</option><option value="D">D</option>
+      <option value="E">E</option><option value="F">F</option>
+    </select>
+
+    <button class="edit-btn" onclick="submitAttendance()">Submit</button>
+    <button class="lock-btn" onclick="loadAttendance()">Load History</button>
+    <br><br>
+    Load History:
+    <select id="historySelect" onchange="loadHistory()">
+      <option value="">-- Select Date --</option>
+    </select>
+    <br><br>
+    <button class="eng-btn" onclick="combinedMonthlyReport()">Combined Monthly Report</button>
+    </div>
+</div>
+
+<div id="combinedReport"></div>
+
+<table id="attTable" class="locked">
+    <tr>
+        <th>Roll No</th>
+        <th id="hr1">Hr 1</th>
+        <th id="hr2">Hr 2</th>
+        <th id="hr3">Hr 3</th>
+        <th id="hr4">Hr 4</th>
+        <th id="hr5">Hr 5</th>
+    </tr>
+</table>
+
+<script>
+const HOURS = 5;
+const rollNumbers=[501,502,503,504,505,506,509,510,511,512,513,514,515,516,517,518,519,520,521,523,524,525,526,527,528,529,530,531,532,533,534,537,538,539,540,541,542,543,544,545,546,547,548,549,550,552,553,554,555,556,557,560,562,563,564,565];
+const table=document.getElementById("attTable");
+let hourLocked=Array(HOURS+1).fill(false);
+
+const timetableSubjects = {
+    A:["DSA","HE","Tamil","English","Maths"],
+    B:["LAB","LAB","LAB","Tamil","English"],
+    C:["English","Python","Maths","Python","DSA"],
+    D:["Maths","Tamil","EVS","Maths","DSA"],
+    E:["Python","DSA","Maths","Tamil","English"],
+    F:["Python","HE","EVS","English","Maths"]
+};
+
+const allSubjects=["DSA","HE","Tamil","English","Maths","Python","EVS","LAB"];
+
+function updateTimeTable(){
+    const day = document.getElementById("dayOrder").value;
+    if(timetableSubjects[day]){
+        for(let h=1;h<=HOURS;h++){
+            document.getElementById("hr"+h).innerHTML = `Hr ${h}: ${timetableSubjects[day][h-1]}`;
+        }
+    }
+}
+
+// Generate table rows
+rollNumbers.forEach(r=>{
+ let row=table.insertRow();
+ row.insertCell().innerText=r;
+ for(let h=1;h<=HOURS;h++){
+  row.insertCell().innerHTML=`<span class="P">P</span><br>
+  <button type="button" onclick="toggleAttendance(this,${h})">A</button>`;
+ }
+});
+
+// Generate summary row
+let sr=table.insertRow();
+sr.insertCell().innerHTML="<b>Summary</b>";
+for(let h=1;h<=HOURS;h++){
+ sr.insertCell().innerHTML=`
+ <div id="absCount${h}" class="abs-count-box">Abs: 0</div>
+ <div id="summary${h}" class="summary">NIL</div>
+ <hr>
+ <button type="button" class="all-absent-btn" onclick="markAllAbsent(${h})">All Abs</button>
+ <button type="button" class="all-present-btn" onclick="markAllPresent(${h})">All P</button>
+ <button type="button" class="free-btn" onclick="markFreeHour(${h})">Free</button>
+ <button type="button" class="lock-btn" onclick="lockHour(${h})">Lock</button>
+ <button type="button" class="edit-btn" onclick="editHour(${h})">Edit</button>
+ <br>
+ <button type="button" class="eng-btn" onclick="markENG(${h})">ENG</button>`;
+}
+
+function toggleAttendance(btn,h){
+ if(hourLocked[h]) return alert("Hour locked.");
+ let span = btn.parentElement.querySelector("span");
+ span.textContent = span.textContent==="A"?"P":"A";
+ span.className = span.textContent==="A"?"A":"P";
+ updateSummary();
+}
+
+function markAllAbsent(h){
+ if(hourLocked[h]) return;
+ for(let i=1;i<=rollNumbers.length;i++){
+  let s=table.rows[i].cells[h].querySelector("span");
+  s.textContent="A"; s.className="A";
+ }
+ updateSummary();
+}
+
+function markAllPresent(h){
+ if(hourLocked[h]) return;
+ for(let i=1;i<=rollNumbers.length;i++){
+  let s=table.rows[i].cells[h].querySelector("span");
+  s.textContent="P"; s.className="P";
+ }
+ updateSummary();
+}
+
+function markFreeHour(h){
+ if(hourLocked[h]) return;
+ for(let i=1;i<=rollNumbers.length;i++){
+  let s=table.rows[i].cells[h].querySelector("span");
+  s.textContent="–"; s.className="D";
+ }
+ updateSummary();
+}
+
+function markENG(h){
+ if(hourLocked[h]) return;
+ for(let i=1;i<=rollNumbers.length;i++){
+  let s=table.rows[i].cells[h].querySelector("span");
+  s.textContent="ENG"; s.className="D";
+ }
+ updateSummary();
+}
+
+function lockHour(h){
+ hourLocked[h]=true;
+ for(let i=1;i<=rollNumbers.length;i++) table.rows[i].cells[h].classList.add("locked");
+ saveToStorage();
+}
+
+function editHour(h){
+ if(prompt("Password:")!=="sjc123") return;
+ hourLocked[h]=false;
+ for(let i=1;i<=rollNumbers.length;i++) table.rows[i].cells[h].classList.remove("locked");
+ saveToStorage();
+}
+
+function updateSummary(){
+ for(let h=1;h<=HOURS;h++){
+  let a=[];
+  for(let i=1;i<=rollNumbers.length;i++){
+   if(table.rows[i].cells[h].querySelector("span").textContent==="A") a.push(table.rows[i].cells[0].innerText);
+  }
+  document.getElementById("absCount"+h).innerText = "Abs: " + a.length;
+  document.getElementById("summary"+h).innerText = a.length ? a.join(", ") : "NIL";
+ }
+}
+
+function saveToStorage(){
+ if(!attDate.value) return;
+ let data={rows:{}, dayOrder: document.getElementById("dayOrder").value, locks: hourLocked};
+ for(let i=1;i<=rollNumbers.length;i++){
+  let r=table.rows[i].cells[0].innerText;
+  data.rows[r]=[];
+  for(let h=1;h<=HOURS;h++) data.rows[r].push(table.rows[i].cells[h].querySelector("span").textContent);
+ }
+ localStorage.setItem("att_"+attDate.value, JSON.stringify(data));
+ populateHistory();
+}
+
+function submitAttendance(){ saveToStorage(); alert("Saved"); }
+
+function loadAttendance(){
+ let data=JSON.parse(localStorage.getItem("att_"+attDate.value));
+ 
+ // 1. Always unlock the main table container once a date is picked
+ if(attDate.value) table.classList.remove("locked");
+
+ // NEW: Determine if the selected date is a Sunday
+ let selectedDate = new Date(attDate.value);
+ let isSunday = selectedDate.getDay() === 0;
+
+ // 2. IF NO PREVIOUS RECORD EXISTS (NEW DATE)
+ if(!data) {
+     hourLocked = Array(HOURS+1).fill(false); // Reset all locks
+     document.getElementById("dayOrder").value = ""; // Reset day order
+     
+     for(let i=1; i<=rollNumbers.length; i++) {
+         for(let h=1; h<=HOURS; h++) {
+             let cell = table.rows[i].cells[h];
+             let s = cell.querySelector("span");
+             
+             // If Sunday, mark as Free Dash. Otherwise, mark as Present.
+             if(isSunday){
+                s.textContent = "–";
+                s.className = "D";
+             } else {
+                s.textContent = "P";
+                s.className = "P";
+             }
+             cell.classList.remove("locked");
+         }
+     }
+     for(let h=1; h<=HOURS; h++) {
+         document.getElementById("hr"+h).innerHTML = "Hr " + h;
+     }
+     updateSummary();
+
+     // Automatically lock all hours if it is Sunday
+     if(isSunday){
+        for(let h=1; h<=HOURS; h++) lockHour(h);
+        alert("Sunday detected: Marked as Holiday.");
+     }
+     return;
+ }
+
+ // 3. IF RECORD EXISTS, LOAD IT
+ document.getElementById("dayOrder").value = data.dayOrder;
+ updateTimeTable();
+ hourLocked = data.locks || Array(HOURS+1).fill(false);
+
+ for(let i=1; i<=rollNumbers.length; i++){
+  let r=table.rows[i].cells[0].innerText;
+  for(let h=1; h<=HOURS; h++){
+   let cell = table.rows[i].cells[h];
+   let s=cell.querySelector("span");
+   let val = data.rows[r][h-1];
+   s.textContent=val;
+   s.className=val==="A"?"A":val==="P"?"P":"D";
+   
+   if(hourLocked[h]) cell.classList.add("locked");
+   else cell.classList.remove("locked");
+  }
+ }
+ updateSummary();
+}
+
+function populateHistory(){
+  const select = document.getElementById("historySelect");
+  select.innerHTML = `<option value="">-- Select Date --</option>`;
+  for(let i=0;i<localStorage.length;i++){
+    let key = localStorage.key(i);
+    if(key.startsWith("att_")){
+      let date = key.replace("att_","");
+      let opt = document.createElement("option");
+      opt.value=date; opt.innerText=date;
+      select.appendChild(opt);
+    }
+  }
+}
+
+function loadHistory(){
+ attDate.value=document.getElementById("historySelect").value;
+ loadAttendance();
+}
+
+function combinedMonthlyReport(){
+    if(!attDate.value){ alert("Select a date."); return; }
+    let sel = new Date(attDate.value);
+    let month = sel.getMonth(), year = sel.getFullYear();
+    let report = {};
+
+    rollNumbers.forEach(r=>{
+        report[r]={total:0};
+        allSubjects.forEach(sub => report[r][sub]=0);
+    });
+
+    for(let i=0;i<localStorage.length;i++){
+        let key = localStorage.key(i);
+        if(key.startsWith("att_")){
+            let d = new Date(key.replace("att_",""));
+            if(d.getMonth()===month && d.getFullYear()===year){
+                let data = JSON.parse(localStorage.getItem(key));
+                rollNumbers.forEach(r=>{
+                    if(data.rows[r]){
+                        for(let h=0; h<HOURS; h++){
+                            if(data.rows[r][h]==="A"){
+                                report[r].total++;
+                                let sub = timetableSubjects[data.dayOrder]?.[h];
+                                if(sub && report[r][sub] !== undefined) report[r][sub]++;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    document.getElementById("main-content").style.display = "none";
+    document.getElementById("attTable").style.display = "none";
+
+    let html = `
+    <div class="report-container">
+        <div class="report-header">
+            <h3 style="margin:0; font-size:14px;">Report: ${sel.toLocaleString('default', {month:'long'})}</h3>
+            <button class="close-report-btn" onclick="closeReport()">Close</button>
+        </div>
+        <table class="report-table">
+            <tr><th style="width:15%">Roll</th><th style="width:10%">Abs</th>`;
+    allSubjects.forEach(sub => html += `<th>${sub.substring(0,3)}</th>`);
+    html += `</tr>`;
+
+    rollNumbers.forEach(r=>{
+        html += `<tr><td><b>${r}</b></td><td style="color:red; font-weight:bold;">${report[r].total}</td>`;
+        allSubjects.forEach(sub => html += `<td>${report[r][sub]}</td>`);
+        html += `</tr>`;
+    });
+
+    html += `</table></div>`;
+    document.getElementById("combinedReport").innerHTML = html;
+}
+
+function closeReport() {
+    document.getElementById("combinedReport").innerHTML = "";
+    document.getElementById("main-content").style.display = "block";
+    document.getElementById("attTable").style.display = "table";
+}
+
+function onDateChange(){ loadAttendance(); }
+populateHistory();
+</script>
+
+</body>
+</html>
